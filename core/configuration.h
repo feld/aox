@@ -103,6 +103,8 @@ public:
         AddressSeparator,
         StatisticsAddress,
         LdapServerAddress,
+        TlsCipherSuite,
+        TlsProtocols,
         // additional texts go ABOVE THIS LINE
         NumTexts
     };
