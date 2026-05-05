@@ -93,18 +93,57 @@ void TlsThread::setup()
     SSL_load_error_strings();
     SSL_library_init();
 
-    ctx = ::SSL_CTX_new( SSLv23_server_method() );
+    ctx = ::SSL_CTX_new( TLS_server_method() );
     long options = SSL_OP_ALL
-        // also try to pick the same ciphers suites more often
         | SSL_OP_CIPHER_SERVER_PREFERENCE
-        // and don't use SSLv2, even if the client wants to
         | SSL_OP_NO_SSLv2
-        // and not v3 either
         | SSL_OP_NO_SSLv3
+        | SSL_OP_NO_DTLSv1
         ;
+
+    // Apply configurable protocol list from tls-protocols
+    // "all" = keep defaults (disable SSLv2/SSLv3 via flags above)
+    // comma-separated list of protocols to ENABLE: TLSv1,TLSv1.1,TLSv1.2,TLSv1.3
+    EString proto( Configuration::text( Configuration::TlsProtocols ) );
+    if ( !proto.isEmpty() && proto.lower() != "all" ) {
+        // Disable all TLS versions by default, then enable what the
+        // user explicitly asks for.
+        options |= SSL_OP_NO_TLSv1;
+        options |= SSL_OP_NO_TLSv1_1;
+        options |= SSL_OP_NO_TLSv1_2;
+#ifdef SSL_OP_NO_TLSv1_3
+        options |= SSL_OP_NO_TLSv1_3;
+#endif
+        EStringList *protos = EStringList::split( ',', proto );
+        EStringList::Iterator it( protos );
+        while ( it ) {
+            EString p = it->lower().simplified();
+            p.replace( " ", EString() );
+            if ( p == "tlsv1.0" || p == "tlsv1" )
+                options &= ~SSL_OP_NO_TLSv1;
+            else if ( p == "tlsv1.1" )
+                options &= ~SSL_OP_NO_TLSv1_1;
+            else if ( p == "tlsv1.2" )
+                options &= ~SSL_OP_NO_TLSv1_2;
+            else if ( p == "tlsv1.3" ) {
+#ifdef SSL_OP_NO_TLSv1_3
+                options &= ~SSL_OP_NO_TLSv1_3;
+#endif
+            }
+            ++it;
+        }
+    }
     SSL_CTX_set_options( ctx, options );
 
-    SSL_CTX_set_cipher_list( ctx, "kEDH:HIGH:!aNULL:!MD5" );
+    EString cipherSuite( Configuration::text( Configuration::TlsCipherSuite ) );
+    if ( cipherSuite.isEmpty() )
+        cipherSuite = "kEDH:HIGH:!aNULL:!MD5";
+    if ( !SSL_CTX_set_cipher_list( ctx, cipherSuite.cstr() ) ) {
+        log( "OpenSSL rejected the configured tls-cipher-suite: " +
+             cipherSuite,
+             Log::Disaster );
+        ::exit( 1 );
+    }
 
     EString certFile( Configuration::text( Configuration::TlsCertFile ) );
     if ( certFile.isEmpty() ) {

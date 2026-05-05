@@ -556,6 +556,24 @@ certificate at runtime and stores both in
 .IR $CONFIGDIR/automatic-key.pem .
 .IP tls-certificate-label
 is not used in 3.1.4.
+.IP tls-cipher-suite
+is an OpenSSL cipher string that controls which ciphers are permitted for
+TLSv1.2 and earlier connections. This setting has no effect on TLSv1.3,
+which uses a fixed cipher set independent of OpenSSL cipher lists. The
+value must be quoted. The default is
+.IR "kEDH:HIGH:!aNULL:!MD5" .
+.IP tls-protocols
+controls which TLS protocol versions are permitted. The value is either
+.I all
+(the default) or a comma-separated list of protocol versions to enable:
+.IR tlsv1 ,
+.IR tlsv1.1 ,
+.IR tlsv1.2 ,
+or
+.IR tlsv1.3 .
+When a list is given, each listed version is enabled and all others are
+disabled. Only versions supported by the linked OpenSSL build will take
+effect. The comma separated list of values must be quoted.
 .SH SYNTAX
 .PP
 The name is case insensitive, as shown:

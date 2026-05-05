@@ -212,7 +212,9 @@ static struct {
     { "smarthost-address", Configuration::SmartHostAddress, "127.0.0.1" },
     { "address-separator", Configuration::AddressSeparator, "" },
     { "statistics-address", Configuration::StatisticsAddress, "127.0.0.1" },
-    { "ldap-server-address", Configuration::LdapServerAddress, "127.0.0.1" }
+    { "ldap-server-address", Configuration::LdapServerAddress, "127.0.0.1" },
+    { "tls-cipher-suite", Configuration::TlsCipherSuite, "kEDH:HIGH:!aNULL:!MD5" },
+    { "tls-protocols", Configuration::TlsProtocols, "all" }
 };
 
 
