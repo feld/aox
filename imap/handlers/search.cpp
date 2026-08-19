@@ -761,32 +761,32 @@ EString ImapSearchResponse::text() const
     EString result;
     result.reserve( n.count() * 10 );
     if ( all || max || min || count ) {
-        result.append( "ESEARCH (tag " );
+        result.append( "ESEARCH (TAG " );
         result.append( t.quoted() );
         result.append( ")" );
         if ( uid )
-            result.append( " uid" );
+            result.append( " UID" );
         if ( count ) {
-            result.append( " count " );
+            result.append( " COUNT " );
             result.appendNumber( n.count() );
         }
         if ( n.isEmpty() )
             return result;
 
         if ( min ) {
-            result.append( " min " );
+            result.append( " MIN " );
             result.appendNumber( n.smallest() );
         }
         if ( max ) {
-            result.append( " max " );
+            result.append( " MAX " );
             result.appendNumber( n.largest() );
         }
         if ( all ) {
-            result.append( " all " );
+            result.append( " ALL " );
             result.append( n.set() );
         }
         if ( ms ) {
-            result.append( " modseq " );
+            result.append( " MODSEQ " );
             result.appendNumber( ms );
         }
     }
@@ -799,7 +799,7 @@ EString ImapSearchResponse::text() const
             i++;
         }
         if ( ms ) {
-            result.append( " (modseq " );
+            result.append( " (MODSEQ " );
             result.appendNumber( ms );
             result.append( ")" );
         }
