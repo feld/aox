@@ -740,26 +740,26 @@ ImapSearchResponse::ImapSearchResponse( ImapSession * session,
 }
 
 
-static void appendUid( EString & r, Session * s, bool u, uint uid )
-{
-    if ( u ) {
-        r.appendNumber( uid );
-    }
-    else {
-        uint m = s->msn( uid );
-        if ( m )
-            r.appendNumber( m );
-    }
-}
-
-
 /*! Constructs a SEARCH or ESEARCH response depending on. */
 
 EString ImapSearchResponse::text() const
 {
     Session * s = session();
+
+    IntegerSet msns;
+    if ( !uid ) {
+        uint i = 1;
+        while ( i <= r.count() ) {
+            uint m = s->msn( r.value( i ) );
+            if ( m )
+                msns.add( m );
+            i++;
+        }
+    }
+    const IntegerSet & n = uid ? r : msns;
+
     EString result;
-    result.reserve( r.count() * 10 );
+    result.reserve( n.count() * 10 );
     if ( all || max || min || count ) {
         result.append( "ESEARCH (tag " );
         result.append( t.quoted() );
@@ -768,36 +768,22 @@ EString ImapSearchResponse::text() const
             result.append( " uid" );
         if ( count ) {
             result.append( " count " );
-            result.appendNumber( r.count() );
+            result.appendNumber( n.count() );
         }
-        if ( r.isEmpty() )
+        if ( n.isEmpty() )
             return result;
 
         if ( min ) {
             result.append( " min " );
-            appendUid( result, s, uid, r.smallest() );
+            result.appendNumber( n.smallest() );
         }
         if ( max ) {
             result.append( " max " );
-            appendUid( result, s, uid, r.largest() );
+            result.appendNumber( n.largest() );
         }
         if ( all ) {
             result.append( " all " );
-            if ( uid ) {
-                result.append( r.set() );
-            }
-            else {
-                IntegerSet msns;
-                uint i = 1;
-                uint max = r.count();
-                while ( i <= max ) {
-                    uint m = s->msn( r.value( i ) );
-                    if ( m )
-                        msns.add( m );
-                    i++;
-                }
-                result.append( msns.set() );
-            }
+            result.append( n.set() );
         }
         if ( ms ) {
             result.append( " modseq " );
@@ -805,13 +791,11 @@ EString ImapSearchResponse::text() const
         }
     }
     else {
-        result.reserve( r.count() * 10 );
         result.append( "SEARCH" );
         uint i = 1;
-        uint max = r.count();
-        while ( i <= max ) {
+        while ( i <= n.count() ) {
             result.append( " " );
-            appendUid( result, s, uid, r.value( i ) );
+            result.appendNumber( n.value( i ) );
             i++;
         }
         if ( ms ) {
