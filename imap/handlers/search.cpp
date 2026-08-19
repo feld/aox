@@ -138,6 +138,11 @@ void Search::parse()
     }
     end();
 
+    if ( imap()->clientSupports( IMAP::UidOnly ) && !d->uid ) {
+        setRespTextCode( "UIDREQUIRED" );
+        error( Bad, "Cannot ask for MSNs to be returned after ENABLE UIDONLY" );
+    }
+
     d->returnModseq = d->root->usesModseq();
     d->root->simplify();
     log( "Search for " + d->root->debugString() );
