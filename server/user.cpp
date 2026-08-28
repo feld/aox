@@ -326,6 +326,22 @@ void User::refreshHelper()
 
     d->state = Nonexistent;
     Row * r = d->q->nextRow();
+    if ( !r && !d->address ) {
+        // The login query found nothing. If login looks like an email
+        // address, retry using the address query — some users log in
+        // with their email rather than their login name.
+        auto at = d->login.find( '@' );
+        if ( at >= 0 ) {
+            d->address = new Address( UString(),
+                                      d->login.mid( 0, at ),
+                                      d->login.mid( at + 1 ) );
+            d->q = new Query( *psa, this );
+            d->q->bind( 1, d->address->localpart() );
+            d->q->bind( 2, d->address->domain() );
+            d->q->execute();
+            return;
+        }
+    }
     if ( r ) {
         d->id = r->getInt( "id" );
         d->login = r->getUString( "login" );
